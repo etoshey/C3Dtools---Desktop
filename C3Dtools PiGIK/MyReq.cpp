@@ -1,39 +1,82 @@
 
 #include "MyReq.h"
 
+#include <Poco/StreamCopier.h>
+#include <Poco/InflatingStream.h>
+#include <Poco/Net/HTTPClientSession.h>
+#include <Poco/Net/HTTPRequest.h>
+#include <Poco/Net/HTTPResponse.h>
+#include <Poco/JSON/Parser.h>
+#include <Poco/Path.h>
+#include <Poco/URI.h>
+#include <iostream>
+#include <string>
 
+using namespace Poco;
+using namespace Poco::Net;
 
-
-std::string MyReq::SendReq(std::string url, std::string body, std::map<std::string, std::string> headers)
+MyReq::MyReq()
 {
-    //// Create a URI
-    //URI uri(url);
+}
 
-    //// Create a session
-    //HTTPClientSession session(uri.getHost(), uri.getPort());
+std::string MyReq::SendReq(std::string url, std::map<std::string, std::string> * parameters)
+{
 
-    //// Set connection to keepalive
-    //session.setKeepAlive(true);
+	JSON::Object bodyObj;
+	std::map<std::string, std::string>::iterator it = parameters->begin();	
 
-    //// Choose the http request method
-    //HTTPRequest request(HTTPRequest::HTTP_GET, "/", HTTPMessage::HTTP_1_1);
+	while (it != parameters->end())
+	{
+		bodyObj.set(it->first, it->second);	
+		++it;
+	}
 
-    //// Add headers
-    //request.add("User-Agent", "Mozilla/5.0");
+	std::ostringstream ss;
+	bodyObj.stringify(ss);
 
-    //// Send the request
-    //session.sendRequest(request);
+	std::string body;
+	body = ss.str();
 
-    //// Receive response
-    //HTTPResponse response;
-    //istream& page = session.receiveResponse(response);
+	// Create a URI
+	URI uri(url);
 
-    //// Print the status code
-    //cout << response.getStatus() << endl;
+	// Create a session
+	HTTPClientSession session(uri.getHost(), uri.getPort());
 
-    //// Lets compile and start wireshark 
+	// Set connection to keepalive
+	session.setKeepAlive(true);
 
-    //return "";
+	// Choose the http request method
+	HTTPRequest request(HTTPRequest::HTTP_POST, uri.getPath(), HTTPMessage::HTTP_1_1);
 
-    return "";
+	// Add headers
+	request.setContentType("application/json");
+
+	request.setContentLength(body.length());
+
+	// send request
+	session.sendRequest(request) << body;
+
+
+	HTTPResponse response;
+
+	// this line is where you get your response
+	std::istream& s = session.receiveResponse(response);
+
+	std::ostringstream outStringStream;
+	outStringStream << s.rdbuf();
+	std::string res_txt = outStringStream.str();
+	Poco::JSON::Parser parser;
+	auto result = parser.parse(res_txt);
+	Poco::JSON::Object obj = *result.extract<Poco::JSON::Object::Ptr>();
+	std::string status = obj.get("status");
+	if (status == "OK") {
+		return obj.get("user_name");
+	}
+	else {
+		return obj.get("error_msg");
+	}
+
+
+	
 }

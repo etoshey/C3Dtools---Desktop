@@ -1,21 +1,13 @@
 #pragma once
 
 #include "MyReq.h"
-
-#include <Poco/StreamCopier.h>
-#include <Poco/InflatingStream.h>
-#include <Poco/Net/HTTPClientSession.h>
-#include <Poco/Net/HTTPRequest.h>
-#include <Poco/Net/HTTPResponse.h>
-#include <Poco/JSON/Parser.h>
-#include <Poco/Path.h>
-#include <Poco/URI.h>
+#include <msclr/marshal_cppstd.h>
+#include <filesystem>
 #include <iostream>
-#include <string>
+#include <thread>
 
 
-using namespace Poco;
-using namespace Poco::Net;
+
 
 namespace $safeprojectname$ {
 
@@ -25,6 +17,14 @@ namespace $safeprojectname$ {
 	using namespace System::Windows::Forms;
 	using namespace System::Data;
 	using namespace System::Drawing;
+	namespace fs = std::filesystem;
+
+
+
+
+	MyReq _req;
+	std::vector<std::string> files;
+	std::string URL = "http://localhost:5001/API/login";
 
 	/// <summary>
 	/// Summary for MyForm
@@ -38,7 +38,10 @@ namespace $safeprojectname$ {
 			//
 			//TODO: Add the constructor code here
 			//
-		}
+		}	
+
+	 
+	
 
 	protected:
 		/// <summary>
@@ -51,15 +54,31 @@ namespace $safeprojectname$ {
 				delete components;
 			}
 		}
-	private: System::Windows::Forms::Button^ button1;
-	private: System::Windows::Forms::Label^ label1;
+
+
 	private: System::Windows::Forms::Panel^ panel1;
-	private: System::Windows::Forms::Label^ label4;
+
 	private: System::Windows::Forms::Label^ label3;
-	private: System::Windows::Forms::Label^ label2;
+
 	private: System::Windows::Forms::Button^ login_btn;
-	private: System::Windows::Forms::TextBox^ textBox2;
+
+	private: System::Windows::Forms::TextBox^ token;
+	private: System::Windows::Forms::Panel^ main_panel;
+	private: System::Windows::Forms::FlowLayoutPanel^ log_panel;
+	private: System::Windows::Forms::ListBox^ log_list;
+	private: System::Windows::Forms::Button^ button_process;
+	private: System::Windows::Forms::CheckBox^ checkbox_ascii;
+	private: System::Windows::Forms::CheckBox^ checkbox_mot;
+	private: System::Windows::Forms::CheckBox^ checkbox_trc;
+	private: System::Windows::Forms::Button^ button_browse;
+	private: System::Windows::Forms::Label^ label1;
 	private: System::Windows::Forms::TextBox^ textBox1;
+	private: System::Windows::Forms::FolderBrowserDialog^ folderBrowserDialog1;
+	private: System::Windows::Forms::Panel^ panel2;
+	private: System::Windows::Forms::ListBox^ logs;
+		   
+	
+
 	protected:
 
 	private:
@@ -68,6 +87,8 @@ namespace $safeprojectname$ {
 		/// </summary>
 		System::ComponentModel::Container ^components;
 
+		
+
 #pragma region Windows Form Designer generated code
 		/// <summary>
 		/// Required method for Designer support - do not modify
@@ -75,67 +96,61 @@ namespace $safeprojectname$ {
 		/// </summary>
 		void InitializeComponent(void)
 		{
-			this->button1 = (gcnew System::Windows::Forms::Button());
-			this->label1 = (gcnew System::Windows::Forms::Label());
 			this->panel1 = (gcnew System::Windows::Forms::Panel());
-			this->textBox1 = (gcnew System::Windows::Forms::TextBox());
-			this->textBox2 = (gcnew System::Windows::Forms::TextBox());
-			this->login_btn = (gcnew System::Windows::Forms::Button());
-			this->label2 = (gcnew System::Windows::Forms::Label());
 			this->label3 = (gcnew System::Windows::Forms::Label());
-			this->label4 = (gcnew System::Windows::Forms::Label());
+			this->token = (gcnew System::Windows::Forms::TextBox());
+			this->login_btn = (gcnew System::Windows::Forms::Button());
+			this->main_panel = (gcnew System::Windows::Forms::Panel());
+			this->panel2 = (gcnew System::Windows::Forms::Panel());
+			this->logs = (gcnew System::Windows::Forms::ListBox());
+			this->log_panel = (gcnew System::Windows::Forms::FlowLayoutPanel());
+			this->log_list = (gcnew System::Windows::Forms::ListBox());
+			this->button_process = (gcnew System::Windows::Forms::Button());
+			this->checkbox_ascii = (gcnew System::Windows::Forms::CheckBox());
+			this->checkbox_mot = (gcnew System::Windows::Forms::CheckBox());
+			this->checkbox_trc = (gcnew System::Windows::Forms::CheckBox());
+			this->button_browse = (gcnew System::Windows::Forms::Button());
+			this->label1 = (gcnew System::Windows::Forms::Label());
+			this->textBox1 = (gcnew System::Windows::Forms::TextBox());
+			this->folderBrowserDialog1 = (gcnew System::Windows::Forms::FolderBrowserDialog());
 			this->panel1->SuspendLayout();
+			this->main_panel->SuspendLayout();
+			this->panel2->SuspendLayout();
+			this->log_panel->SuspendLayout();
 			this->SuspendLayout();
-			// 
-			// button1
-			// 
-			this->button1->Location = System::Drawing::Point(367, 12);
-			this->button1->Name = L"button1";
-			this->button1->Size = System::Drawing::Size(75, 23);
-			this->button1->TabIndex = 0;
-			this->button1->Text = L"button1";
-			this->button1->UseVisualStyleBackColor = true;
-			this->button1->Click += gcnew System::EventHandler(this, &MyForm::button1_Click);
-			// 
-			// label1
-			// 
-			this->label1->AutoSize = true;
-			this->label1->Location = System::Drawing::Point(389, 53);
-			this->label1->Name = L"label1";
-			this->label1->Size = System::Drawing::Size(35, 13);
-			this->label1->TabIndex = 1;
-			this->label1->Text = L"label1";
 			// 
 			// panel1
 			// 
-			this->panel1->Controls->Add(this->label4);
 			this->panel1->Controls->Add(this->label3);
-			this->panel1->Controls->Add(this->label2);
+			this->panel1->Controls->Add(this->token);
 			this->panel1->Controls->Add(this->login_btn);
-			this->panel1->Controls->Add(this->textBox2);
-			this->panel1->Controls->Add(this->textBox1);
-			this->panel1->Location = System::Drawing::Point(28, 109);
+			this->panel1->Location = System::Drawing::Point(12, 12);
 			this->panel1->Name = L"panel1";
-			this->panel1->Size = System::Drawing::Size(405, 183);
+			this->panel1->Size = System::Drawing::Size(558, 66);
 			this->panel1->TabIndex = 2;
 			// 
-			// textBox1
+			// label3
 			// 
-			this->textBox1->Location = System::Drawing::Point(92, 68);
-			this->textBox1->Name = L"textBox1";
-			this->textBox1->Size = System::Drawing::Size(214, 20);
-			this->textBox1->TabIndex = 0;
+			this->label3->AutoSize = true;
+			this->label3->Location = System::Drawing::Point(8, 9);
+			this->label3->Name = L"label3";
+			this->label3->Size = System::Drawing::Size(38, 13);
+			this->label3->TabIndex = 4;
+			this->label3->Text = L"Token";
 			// 
-			// textBox2
+			// token
 			// 
-			this->textBox2->Location = System::Drawing::Point(92, 111);
-			this->textBox2->Name = L"textBox2";
-			this->textBox2->Size = System::Drawing::Size(214, 20);
-			this->textBox2->TabIndex = 1;
+			this->token->Location = System::Drawing::Point(11, 25);
+			this->token->Name = L"token";
+			this->token->Size = System::Drawing::Size(452, 20);
+			this->token->TabIndex = 0;
+			this->token->Text = L"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIyMDk1Njc0MTI5Mzc2ODUyMiIsImlh"
+				L"dCI6MTY3OTkxODM0NSwiZXhwIjoxNjc5OTIxOTQ1fQ.esx5EVT6oo1jF0ko_uZvUSlLt8dvrFynLxOrU"
+				L"OkvLLY";
 			// 
 			// login_btn
 			// 
-			this->login_btn->Location = System::Drawing::Point(158, 145);
+			this->login_btn->Location = System::Drawing::Point(469, 25);
 			this->login_btn->Name = L"login_btn";
 			this->login_btn->Size = System::Drawing::Size(75, 23);
 			this->login_btn->TabIndex = 2;
@@ -143,118 +158,214 @@ namespace $safeprojectname$ {
 			this->login_btn->UseVisualStyleBackColor = true;
 			this->login_btn->Click += gcnew System::EventHandler(this, &MyForm::login_btn_Click);
 			// 
-			// label2
+			// main_panel
 			// 
-			this->label2->AutoSize = true;
-			this->label2->Font = (gcnew System::Drawing::Font(L"Arial Narrow", 14, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
-				static_cast<System::Byte>(0)));
-			this->label2->Location = System::Drawing::Point(13, 10);
-			this->label2->Name = L"label2";
-			this->label2->Size = System::Drawing::Size(146, 23);
-			this->label2->TabIndex = 3;
-			this->label2->Text = L"Login to C3DTools :";
+			this->main_panel->Controls->Add(this->panel2);
+			this->main_panel->Controls->Add(this->log_panel);
+			this->main_panel->Controls->Add(this->button_process);
+			this->main_panel->Controls->Add(this->checkbox_ascii);
+			this->main_panel->Controls->Add(this->checkbox_mot);
+			this->main_panel->Controls->Add(this->checkbox_trc);
+			this->main_panel->Controls->Add(this->button_browse);
+			this->main_panel->Controls->Add(this->label1);
+			this->main_panel->Controls->Add(this->textBox1);
+			this->main_panel->Location = System::Drawing::Point(13, 85);
+			this->main_panel->Name = L"main_panel";
+			this->main_panel->Size = System::Drawing::Size(557, 343);
+			this->main_panel->TabIndex = 3;
 			// 
-			// label3
+			// panel2
 			// 
-			this->label3->AutoSize = true;
-			this->label3->Location = System::Drawing::Point(92, 50);
-			this->label3->Name = L"label3";
-			this->label3->Size = System::Drawing::Size(60, 13);
-			this->label3->TabIndex = 4;
-			this->label3->Text = L"User Name";
+			this->panel2->Controls->Add(this->logs);
+			this->panel2->Location = System::Drawing::Point(13, 216);
+			this->panel2->Name = L"panel2";
+			this->panel2->Size = System::Drawing::Size(530, 113);
+			this->panel2->TabIndex = 8;
 			// 
-			// label4
+			// logs
 			// 
-			this->label4->AutoSize = true;
-			this->label4->Location = System::Drawing::Point(92, 95);
-			this->label4->Name = L"label4";
-			this->label4->Size = System::Drawing::Size(53, 13);
-			this->label4->TabIndex = 5;
-			this->label4->Text = L"Password";
+			this->logs->BackColor = System::Drawing::SystemColors::InfoText;
+			this->logs->ForeColor = System::Drawing::SystemColors::Menu;
+			this->logs->FormattingEnabled = true;
+			this->logs->Location = System::Drawing::Point(4, 4);
+			this->logs->Name = L"logs";
+			this->logs->Size = System::Drawing::Size(519, 95);
+			this->logs->TabIndex = 0;
+			// 
+			// log_panel
+			// 
+			this->log_panel->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Bottom)
+				| System::Windows::Forms::AnchorStyles::Left)
+				| System::Windows::Forms::AnchorStyles::Right));
+			this->log_panel->Controls->Add(this->log_list);
+			this->log_panel->Location = System::Drawing::Point(13, 93);
+			this->log_panel->Name = L"log_panel";
+			this->log_panel->Size = System::Drawing::Size(530, 117);
+			this->log_panel->TabIndex = 7;
+			// 
+			// log_list
+			// 
+			this->log_list->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((System::Windows::Forms::AnchorStyles::Bottom | System::Windows::Forms::AnchorStyles::Right));
+			this->log_list->FormattingEnabled = true;
+			this->log_list->Location = System::Drawing::Point(3, 3);
+			this->log_list->Name = L"log_list";
+			this->log_list->Size = System::Drawing::Size(520, 108);
+			this->log_list->TabIndex = 0;
+			// 
+			// button_process
+			// 
+			this->button_process->Location = System::Drawing::Point(468, 59);
+			this->button_process->Name = L"button_process";
+			this->button_process->Size = System::Drawing::Size(75, 23);
+			this->button_process->TabIndex = 6;
+			this->button_process->Text = L"Process";
+			this->button_process->UseVisualStyleBackColor = true;
+			this->button_process->Click += gcnew System::EventHandler(this, &MyForm::button_process_Click);
+			// 
+			// checkbox_ascii
+			// 
+			this->checkbox_ascii->AutoSize = true;
+			this->checkbox_ascii->Location = System::Drawing::Point(208, 59);
+			this->checkbox_ascii->Name = L"checkbox_ascii";
+			this->checkbox_ascii->Size = System::Drawing::Size(53, 17);
+			this->checkbox_ascii->TabIndex = 5;
+			this->checkbox_ascii->Text = L"ASCII";
+			this->checkbox_ascii->UseVisualStyleBackColor = true;
+			// 
+			// checkbox_mot
+			// 
+			this->checkbox_mot->AutoSize = true;
+			this->checkbox_mot->Location = System::Drawing::Point(138, 59);
+			this->checkbox_mot->Name = L"checkbox_mot";
+			this->checkbox_mot->Size = System::Drawing::Size(53, 17);
+			this->checkbox_mot->TabIndex = 4;
+			this->checkbox_mot->Text = L".MOT";
+			this->checkbox_mot->UseVisualStyleBackColor = true;
+			// 
+			// checkbox_trc
+			// 
+			this->checkbox_trc->AutoSize = true;
+			this->checkbox_trc->Location = System::Drawing::Point(65, 59);
+			this->checkbox_trc->Name = L"checkbox_trc";
+			this->checkbox_trc->Size = System::Drawing::Size(51, 17);
+			this->checkbox_trc->TabIndex = 3;
+			this->checkbox_trc->Text = L".TRC";
+			this->checkbox_trc->UseVisualStyleBackColor = true;
+			// 
+			// button_browse
+			// 
+			this->button_browse->Location = System::Drawing::Point(468, 23);
+			this->button_browse->Name = L"button_browse";
+			this->button_browse->Size = System::Drawing::Size(75, 23);
+			this->button_browse->TabIndex = 2;
+			this->button_browse->Text = L"Browse";
+			this->button_browse->UseVisualStyleBackColor = true;
+			this->button_browse->Click += gcnew System::EventHandler(this, &MyForm::button_browse_Click);
+			// 
+			// label1
+			// 
+			this->label1->AutoSize = true;
+			this->label1->Location = System::Drawing::Point(10, 28);
+			this->label1->Name = L"label1";
+			this->label1->Size = System::Drawing::Size(47, 13);
+			this->label1->TabIndex = 1;
+			this->label1->Text = L"Source :";
+			// 
+			// textBox1
+			// 
+			this->textBox1->Location = System::Drawing::Point(63, 25);
+			this->textBox1->Name = L"textBox1";
+			this->textBox1->Size = System::Drawing::Size(399, 20);
+			this->textBox1->TabIndex = 0;
 			// 
 			// MyForm
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
-			this->ClientSize = System::Drawing::Size(454, 339);
+			this->ClientSize = System::Drawing::Size(582, 440);
+			this->Controls->Add(this->main_panel);
 			this->Controls->Add(this->panel1);
-			this->Controls->Add(this->label1);
-			this->Controls->Add(this->button1);
 			this->Name = L"MyForm";
-			this->Text = L"MyForm";
+			this->Text = L"C3Dtools.com";
 			this->panel1->ResumeLayout(false);
 			this->panel1->PerformLayout();
+			this->main_panel->ResumeLayout(false);
+			this->main_panel->PerformLayout();
+			this->panel2->ResumeLayout(false);
+			this->log_panel->ResumeLayout(false);
 			this->ResumeLayout(false);
-			this->PerformLayout();
 
 		}
 #pragma endregion
 	private: System::Void button1_Click(System::Object^ sender, System::EventArgs^ e) {
-		this->label1->Text = "OK!!1";
+	
 	}
 
 	private: System::Void login_btn_Click(System::Object^ sender, System::EventArgs^ e) {
 		
-
-		// creating a json object to send to the server
-		JSON::Object bodyObj;
-		bodyObj.set("username", "Raj");
-		bodyObj.set("password", 20);
-
-		std::ostringstream ss;
-
-		bodyObj.stringify(ss);
-
-		std::string body;
-		body = ss.str();
-
-
-		// Create a URI
-		URI uri("http://localhost:5001/API/login");
-
-		// Create a session
-		HTTPClientSession session(uri.getHost(), uri.getPort());
-
-		// Set connection to keepalive
-		session.setKeepAlive(true);
-
-		// Choose the http request method
-		HTTPRequest request(HTTPRequest::HTTP_POST, uri.getPath(),HTTPMessage::HTTP_1_1);
-
-		// Add headers
-		request.setContentType("application/json");
-
-		request.setContentLength(body.length());
-
-		// send request
-		std::ostream& o = session.sendRequest(request) << body;
 		
+		std::map<std::string, std::string> param;		
+		param["api_key"] = msclr::interop::marshal_as< std::string >(this->token->Text);		
+		std::string responce =  _req.SendReq(URL, &param);	
+		this->FindForm()->Text = gcnew String(responce.c_str());
 
-		JSON::Object resObj;
-		resObj.stringify(o);
-
-		HTTPResponse response;
-
-		// this line is where you get your response
-		std::istream& s = session.receiveResponse(response);
-
-		std::stringstream ss2;
-		Poco::InflatingInputStream inflater(s, Poco::InflatingStreamBuf::STREAM_GZIP);
-		StreamCopier::copyStream(inflater, ss2);
-
-
-		int a = 0;
-		//Poco::JSON::Parser parser;
-		//Poco::JSON::Object::Ptr ret = parser.parse(s).extract<Poco::JSON::Object::Ptr>();
-
-		// (*ret) will contain all the members in a json structure returned
-		//if ((*ret).get("success") != true) {
-		//	std::cout << "Failed to upload: " << (*ret).get("message").toString();
-		//	return;
-		//}
-
-
-		
+			
 	}
-};
+private: System::Void button_browse_Click(System::Object^ sender, System::EventArgs^ e) {
+
+	System::Windows::Forms::DialogResult _result =  this->folderBrowserDialog1->ShowDialog();
+	if (_result == System::Windows::Forms::DialogResult::OK) {
+		 
+	
+		System::String^ _path = this->folderBrowserDialog1->SelectedPath;
+		std::string _sp = msclr::interop::marshal_as<std::string>(_path);
+		std::filesystem::path _p = std::filesystem::path(_sp);
+
+		
+		
+		for (std::filesystem::recursive_directory_iterator it(_p), end; it != end; ++it) {
+			if (!is_directory(it->path())) {
+				if (it->path().string().find(".c3d") != std::string::npos)
+					files.push_back(it->path().string());
+			}
+		}
+		for (std::string const& filePath : files) {
+			this->log_list->Items->Add(gcnew String(filePath.c_str()));
+		}
+
+		//log
+		this->logs->Items->Add("Number Of Files --->  " + files.size().ToString());
+
+	}
+
+
+
 }
+
+
+
+
+
+private: System::Void button_process_Click(System::Object^ sender, System::EventArgs^ e) {
+
+	//get type of process
+	bool trc = this->checkbox_trc->Checked;
+	bool mot = this->checkbox_mot->Checked;
+	bool ascii = this->checkbox_ascii->Checked;	
+
+	//
+	
+
+}
+
+
+
+
+
+};
+
+
+}
+
+
+
