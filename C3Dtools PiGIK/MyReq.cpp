@@ -6,6 +6,8 @@
 #include <Poco/Net/HTTPClientSession.h>
 #include <Poco/Net/HTTPRequest.h>
 #include <Poco/Net/HTTPResponse.h>
+#include <Poco/Net/HTMLForm.h>
+#include <Poco/Net/FilePartSource.h>
 #include <Poco/JSON/Parser.h>
 #include <Poco/Path.h>
 #include <Poco/URI.h>
@@ -79,4 +81,38 @@ std::string MyReq::SendReq(std::string url, std::map<std::string, std::string> *
 
 
 	
+}
+
+std::string MyReq::upload(std::string url, std::map<std::string, bool>* parameter , std::string file_path)
+{
+	// Create a URI
+	URI uri(url);
+
+	HTTPRequest request(HTTPRequest::HTTP_POST, uri.getPath(), HTTPMessage::HTTP_1_1);
+	HTMLForm form;
+	form.setEncoding(HTMLForm::ENCODING_MULTIPART);
+	std::map<std::string, bool>::iterator it = parameter->begin();
+	while (it != parameter->end())
+	{
+		if (it->second) {
+			form.set(it->first, "TRUE");
+		}
+		else {
+			form.set(it->first, "FALSE");
+		}
+		++it;
+	}
+	form.addPart("file", new FilePartSource(file_path));
+	form.prepareSubmit(request);
+
+	HTTPClientSession* httpSession = new HTTPClientSession(uri.getHost(), uri.getPort());
+	httpSession->setTimeout(Poco::Timespan(60, 0));
+	form.write(httpSession->sendRequest(request));
+
+	Poco::Net::HTTPResponse res;
+	std::istream& is = httpSession->receiveResponse(res);
+	Poco::StreamCopier::copyStream(is, std::cout);
+
+
+	return std::string();
 }
