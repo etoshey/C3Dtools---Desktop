@@ -25,6 +25,7 @@ namespace $safeprojectname$ {
 	MyReq _req;
 	std::vector<std::string> files;
 	std::string URL = "http://localhost:5001/API";
+	std::vector<std::string> log;
 
 	/// <summary>
 	/// Summary for MyForm
@@ -67,12 +68,13 @@ namespace $safeprojectname$ {
 	private: System::Windows::Forms::FlowLayoutPanel^ log_panel;
 	private: System::Windows::Forms::ListBox^ log_list;
 	private: System::Windows::Forms::Button^ button_process;
-	private: System::Windows::Forms::CheckBox^ checkbox_ascii;
+	private: System::Windows::Forms::CheckBox^ checkbox_ascii_point;
+
 	private: System::Windows::Forms::CheckBox^ checkbox_mot;
 	private: System::Windows::Forms::CheckBox^ checkbox_trc;
 	private: System::Windows::Forms::Button^ button_browse;
 	private: System::Windows::Forms::Label^ label1;
-	private: System::Windows::Forms::TextBox^ textBox1;
+
 	private: System::Windows::Forms::FolderBrowserDialog^ folderBrowserDialog1;
 	private: System::Windows::Forms::Panel^ panel2;
 	private: System::Windows::Forms::ListBox^ logs;
@@ -81,6 +83,9 @@ namespace $safeprojectname$ {
 
 	private: System::Windows::Forms::ProgressBar^ progressBar1;
 	private: System::Windows::Forms::CheckBox^ checkbox_YUP;
+	private: System::Windows::Forms::CheckBox^ checkbox_ascii_analog;
+	private: System::Windows::Forms::TextBox^ textBox_path;
+
 
 
 
@@ -106,21 +111,22 @@ namespace $safeprojectname$ {
 			this->token = (gcnew System::Windows::Forms::TextBox());
 			this->login_btn = (gcnew System::Windows::Forms::Button());
 			this->main_panel = (gcnew System::Windows::Forms::Panel());
+			this->checkbox_ascii_analog = (gcnew System::Windows::Forms::CheckBox());
+			this->checkbox_YUP = (gcnew System::Windows::Forms::CheckBox());
 			this->progressBar1 = (gcnew System::Windows::Forms::ProgressBar());
 			this->panel2 = (gcnew System::Windows::Forms::Panel());
 			this->logs = (gcnew System::Windows::Forms::ListBox());
 			this->log_panel = (gcnew System::Windows::Forms::FlowLayoutPanel());
 			this->log_list = (gcnew System::Windows::Forms::ListBox());
 			this->button_process = (gcnew System::Windows::Forms::Button());
-			this->checkbox_ascii = (gcnew System::Windows::Forms::CheckBox());
+			this->checkbox_ascii_point = (gcnew System::Windows::Forms::CheckBox());
 			this->checkbox_mot = (gcnew System::Windows::Forms::CheckBox());
 			this->checkbox_trc = (gcnew System::Windows::Forms::CheckBox());
 			this->button_browse = (gcnew System::Windows::Forms::Button());
 			this->label1 = (gcnew System::Windows::Forms::Label());
-			this->textBox1 = (gcnew System::Windows::Forms::TextBox());
 			this->folderBrowserDialog1 = (gcnew System::Windows::Forms::FolderBrowserDialog());
 			this->backgroundWorker1 = (gcnew System::ComponentModel::BackgroundWorker());
-			this->checkbox_YUP = (gcnew System::Windows::Forms::CheckBox());
+			this->textBox_path = (gcnew System::Windows::Forms::TextBox());
 			this->panel1->SuspendLayout();
 			this->main_panel->SuspendLayout();
 			this->panel2->SuspendLayout();
@@ -168,21 +174,42 @@ namespace $safeprojectname$ {
 			// 
 			// main_panel
 			// 
+			this->main_panel->Controls->Add(this->checkbox_ascii_analog);
 			this->main_panel->Controls->Add(this->checkbox_YUP);
 			this->main_panel->Controls->Add(this->progressBar1);
 			this->main_panel->Controls->Add(this->panel2);
 			this->main_panel->Controls->Add(this->log_panel);
 			this->main_panel->Controls->Add(this->button_process);
-			this->main_panel->Controls->Add(this->checkbox_ascii);
+			this->main_panel->Controls->Add(this->checkbox_ascii_point);
 			this->main_panel->Controls->Add(this->checkbox_mot);
 			this->main_panel->Controls->Add(this->checkbox_trc);
 			this->main_panel->Controls->Add(this->button_browse);
 			this->main_panel->Controls->Add(this->label1);
-			this->main_panel->Controls->Add(this->textBox1);
+			this->main_panel->Controls->Add(this->textBox_path);
 			this->main_panel->Location = System::Drawing::Point(13, 85);
 			this->main_panel->Name = L"main_panel";
 			this->main_panel->Size = System::Drawing::Size(557, 352);
 			this->main_panel->TabIndex = 3;
+			// 
+			// checkbox_ascii_analog
+			// 
+			this->checkbox_ascii_analog->AutoSize = true;
+			this->checkbox_ascii_analog->Location = System::Drawing::Point(358, 59);
+			this->checkbox_ascii_analog->Name = L"checkbox_ascii_analog";
+			this->checkbox_ascii_analog->Size = System::Drawing::Size(89, 17);
+			this->checkbox_ascii_analog->TabIndex = 11;
+			this->checkbox_ascii_analog->Text = L"ASCII-Analog";
+			this->checkbox_ascii_analog->UseVisualStyleBackColor = true;
+			// 
+			// checkbox_YUP
+			// 
+			this->checkbox_YUP->AutoSize = true;
+			this->checkbox_YUP->Location = System::Drawing::Point(63, 59);
+			this->checkbox_YUP->Name = L"checkbox_YUP";
+			this->checkbox_YUP->Size = System::Drawing::Size(51, 17);
+			this->checkbox_YUP->TabIndex = 10;
+			this->checkbox_YUP->Text = L"Y-UP";
+			this->checkbox_YUP->UseVisualStyleBackColor = true;
 			// 
 			// progressBar1
 			// 
@@ -239,20 +266,20 @@ namespace $safeprojectname$ {
 			this->button_process->UseVisualStyleBackColor = true;
 			this->button_process->Click += gcnew System::EventHandler(this, &MyForm::button_process_Click);
 			// 
-			// checkbox_ascii
+			// checkbox_ascii_point
 			// 
-			this->checkbox_ascii->AutoSize = true;
-			this->checkbox_ascii->Location = System::Drawing::Point(267, 59);
-			this->checkbox_ascii->Name = L"checkbox_ascii";
-			this->checkbox_ascii->Size = System::Drawing::Size(53, 17);
-			this->checkbox_ascii->TabIndex = 5;
-			this->checkbox_ascii->Text = L"ASCII";
-			this->checkbox_ascii->UseVisualStyleBackColor = true;
+			this->checkbox_ascii_point->AutoSize = true;
+			this->checkbox_ascii_point->Location = System::Drawing::Point(266, 59);
+			this->checkbox_ascii_point->Name = L"checkbox_ascii_point";
+			this->checkbox_ascii_point->Size = System::Drawing::Size(85, 17);
+			this->checkbox_ascii_point->TabIndex = 5;
+			this->checkbox_ascii_point->Text = L"ASCII-Points";
+			this->checkbox_ascii_point->UseVisualStyleBackColor = true;
 			// 
 			// checkbox_mot
 			// 
 			this->checkbox_mot->AutoSize = true;
-			this->checkbox_mot->Location = System::Drawing::Point(197, 59);
+			this->checkbox_mot->Location = System::Drawing::Point(195, 59);
 			this->checkbox_mot->Name = L"checkbox_mot";
 			this->checkbox_mot->Size = System::Drawing::Size(53, 17);
 			this->checkbox_mot->TabIndex = 4;
@@ -288,13 +315,6 @@ namespace $safeprojectname$ {
 			this->label1->TabIndex = 1;
 			this->label1->Text = L"Source :";
 			// 
-			// textBox1
-			// 
-			this->textBox1->Location = System::Drawing::Point(63, 25);
-			this->textBox1->Name = L"textBox1";
-			this->textBox1->Size = System::Drawing::Size(399, 20);
-			this->textBox1->TabIndex = 0;
-			// 
 			// backgroundWorker1
 			// 
 			this->backgroundWorker1->WorkerReportsProgress = true;
@@ -303,15 +323,13 @@ namespace $safeprojectname$ {
 			this->backgroundWorker1->ProgressChanged += gcnew System::ComponentModel::ProgressChangedEventHandler(this, &MyForm::backgroundWorker1_ProgressChanged);
 			this->backgroundWorker1->RunWorkerCompleted += gcnew System::ComponentModel::RunWorkerCompletedEventHandler(this, &MyForm::backgroundWorker1_RunWorkerCompleted);
 			// 
-			// checkbox_YUP
+			// textBox_path
 			// 
-			this->checkbox_YUP->AutoSize = true;
-			this->checkbox_YUP->Location = System::Drawing::Point(63, 59);
-			this->checkbox_YUP->Name = L"checkbox_YUP";
-			this->checkbox_YUP->Size = System::Drawing::Size(51, 17);
-			this->checkbox_YUP->TabIndex = 10;
-			this->checkbox_YUP->Text = L"Y-UP";
-			this->checkbox_YUP->UseVisualStyleBackColor = true;
+			this->textBox_path->Enabled = false;
+			this->textBox_path->Location = System::Drawing::Point(63, 25);
+			this->textBox_path->Name = L"textBox_path";
+			this->textBox_path->Size = System::Drawing::Size(399, 20);
+			this->textBox_path->TabIndex = 0;
 			// 
 			// MyForm
 			// 
@@ -337,7 +355,7 @@ namespace $safeprojectname$ {
 	}
 
 	private: System::Void login_btn_Click(System::Object^ sender, System::EventArgs^ e) {
-
+				
 
 		std::map<std::string, std::string> param;
 		param["api_key"] = msclr::interop::marshal_as< std::string >(this->token->Text);
@@ -360,13 +378,15 @@ namespace $safeprojectname$ {
 
 			for (std::filesystem::recursive_directory_iterator it(_p), end; it != end; ++it) {
 				if (!is_directory(it->path())) {
-					if (it->path().string().find(".c3d") != std::string::npos)
+					if (it->path().extension() == ".c3d")
 						files.push_back(it->path().string());
 				}
 			}
 			for (std::string const& filePath : files) {
 				this->log_list->Items->Add(gcnew String(filePath.c_str()));
 			}
+
+			this->textBox_path->Text = _path;
 
 			//log
 			this->logs->Items->Add("Number Of Files --->  " + files.size().ToString());
@@ -386,6 +406,7 @@ namespace $safeprojectname$ {
 
 			// run background worker
 			this->backgroundWorker1->RunWorkerAsync(1);
+
 
 
 			// change to stop btn
@@ -412,38 +433,64 @@ namespace $safeprojectname$ {
 	private: System::Void backgroundWorker1_DoWork(System::Object^ sender, System::ComponentModel::DoWorkEventArgs^ e) {
 
 		int n = files.size();
+
+		log.push_back("---------------- Processing is Started ----------------");
 		for (size_t i = 0; i < n; i++)
 		{
 			if (this->backgroundWorker1->CancellationPending) {
 				e->Cancel = true;
 				break;
 			}
-			else {				
+			else {		
+
+				std::filesystem::path p(files[i]);
+				std::filesystem::path dir = p.parent_path();
+				std::filesystem::path file_name = p.filename();
+
+				log.push_back("Unloading -------> " + file_name.string());
 				this->backgroundWorker1->ReportProgress((i+1) * (100/n));
 
-				std::map<std::string, bool> param;
-				param["TRC"] =this->checkbox_trc->Checked;
-				param["MOT"] = this->checkbox_mot->Checked;
-				param["ASCII"] = this->checkbox_ascii->Checked;
-				param["Y_UP"] = this->checkbox_YUP->Checked;
+				std::map<std::string, std::string> param;
+				param["api_key"] = msclr::interop::marshal_as< std::string >(this->token->Text);
+				param["TRC"] =(this->checkbox_trc->Checked == true) ? "TRUE"  : "FALSE";
+				param["MOT"] = (this->checkbox_mot->Checked == true) ? "TRUE" : "FALSE";
+				param["ASCII_Points"] = (this->checkbox_ascii_point->Checked == true) ? "TRUE" : "FALSE";;
+				param["ASCII_Analog"] = (this->checkbox_ascii_analog->Checked == true) ? "TRUE" : "FALSE";;
+				param["Y_UP"] = (this->checkbox_YUP->Checked == true) ? "TRUE" : "FALSE";
 
-				_req.upload(URL+"/upload_process", &param, files[i]);
-				Sleep(1000);
+				
+				_req.upload(URL+"/upload_process", &param, files[i], &log);
+							
+
+				
 			}
 		}
 
 		// completed progress bar
+		log.push_back("---------------- Processing completed ----------------");
 		this->backgroundWorker1->ReportProgress(100);
+		this->button_process->Text = "Stop";
 
 	}
 	private: System::Void backgroundWorker1_ProgressChanged(System::Object^ sender, System::ComponentModel::ProgressChangedEventArgs^ e) {
 		
 			this->progressBar1->Value = e->ProgressPercentage;
+			for (auto i = log.begin(); i != log.end(); i++) {
+				update_log(*i);
+			}
+			log.clear();
+
 	}
 
 	private: System::Void backgroundWorker1_RunWorkerCompleted(System::Object^ sender, System::ComponentModel::RunWorkerCompletedEventArgs^ e) {
 
 		
+	}
+
+	void update_log(std::string msg) {
+
+		this->logs->Items->Add(">> " + gcnew String(msg.c_str()));		
+
 	}
 };
 
