@@ -24,7 +24,7 @@ MyReq::MyReq()
 {
 }
 
-std::string MyReq::SendReq(std::string url, std::map<std::string, std::string> * parameters)
+void MyReq::SendReq(std::string url, std::map<std::string, std::string> * parameters, std::vector<std::string>* output)
 {
 
 	JSON::Object bodyObj;
@@ -68,6 +68,8 @@ std::string MyReq::SendReq(std::string url, std::map<std::string, std::string> *
 	// this line is where you get your response
 	std::istream& s = session.receiveResponse(response);
 
+	
+
 	std::ostringstream outStringStream;
 	outStringStream << s.rdbuf();
 	std::string res_txt = outStringStream.str();
@@ -75,11 +77,18 @@ std::string MyReq::SendReq(std::string url, std::map<std::string, std::string> *
 	auto result = parser.parse(res_txt);
 	Poco::JSON::Object obj = *result.extract<Poco::JSON::Object::Ptr>();
 	std::string status = obj.get("status");
+
+	
+
 	if (status == "OK") {
-		return obj.get("user_name");
+
+		output->push_back("OK");
+		output->push_back(obj.get("user_name").toString());
+		
 	}
 	else {
-		return obj.get("error_msg");
+		output->push_back("ERROR");
+		output->push_back(obj.get("error_msg").toString());		
 	}
 
 
@@ -206,6 +215,55 @@ std::string MyReq::upload(std::string url, std::map<std::string, std::string>* p
 	{
 		log->push_back( " FAILED !!");
 	}
+}
+
+bool MyReq::write_token(std::string _key)
+{
+	Poco::JSON::Object key;
+	key.set("KEY", _key);
+	std::ostringstream oss;
+	Poco::JSON::Stringifier::stringify(key, oss);
+	std::vector<std::string> vec_key;
+	vec_key.push_back(oss.str());
+	return WriteFile("key.txt", &vec_key, false);
+
+}
+
+std::string MyReq::read_token()
+{
+	std::fstream file;
+
+	//if exist 
+	if (std::filesystem::exists("key.txt")) {
+
+		try
+		{
+			std::fstream newfile;
+			newfile.open("key.txt", std::ios::in);
+			std::string Fline;
+			if (newfile.is_open()) {
+				std::string tp;
+				while (std::getline(newfile, tp)) {
+					Fline = tp;
+				}
+				newfile.close();
+			}
+
+			Poco::JSON::Parser parser;
+			auto json = parser.parse(Fline);
+			Poco::JSON::Object key = *json.extract<Poco::JSON::Object::Ptr>();
+			return key.get("KEY");
+		}
+		catch (const std::exception&)
+		{
+			return "Failed to load key file.";
+		}
+
+	}
+	else {
+		return "";
+	}
+
 }
 
 bool MyReq::WriteFile(std::string path, std::vector<std::string>* data, bool append)

@@ -10,8 +10,10 @@ class MyReq
 {
 public:
 	MyReq();
-	std::string SendReq(std::string url, std::map<std::string, std::string>* parameter);
+	void SendReq(std::string url, std::map<std::string, std::string>* parameter, std::vector<std::string>* output);
 	std::string upload(std::string url, std::map<std::string, std::string>* parameter, std::string file_path, std::vector<std::string>* log);
+	bool write_token(std::string _key);
+	std::string MyReq::read_token();
 
 
 

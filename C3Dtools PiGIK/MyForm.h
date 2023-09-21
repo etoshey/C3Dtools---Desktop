@@ -124,9 +124,9 @@ namespace $safeprojectname$ {
 			this->checkbox_trc = (gcnew System::Windows::Forms::CheckBox());
 			this->button_browse = (gcnew System::Windows::Forms::Button());
 			this->label1 = (gcnew System::Windows::Forms::Label());
+			this->textBox_path = (gcnew System::Windows::Forms::TextBox());
 			this->folderBrowserDialog1 = (gcnew System::Windows::Forms::FolderBrowserDialog());
 			this->backgroundWorker1 = (gcnew System::ComponentModel::BackgroundWorker());
-			this->textBox_path = (gcnew System::Windows::Forms::TextBox());
 			this->panel1->SuspendLayout();
 			this->main_panel->SuspendLayout();
 			this->panel2->SuspendLayout();
@@ -186,6 +186,7 @@ namespace $safeprojectname$ {
 			this->main_panel->Controls->Add(this->button_browse);
 			this->main_panel->Controls->Add(this->label1);
 			this->main_panel->Controls->Add(this->textBox_path);
+			this->main_panel->Enabled = false;
 			this->main_panel->Location = System::Drawing::Point(13, 85);
 			this->main_panel->Name = L"main_panel";
 			this->main_panel->Size = System::Drawing::Size(557, 352);
@@ -315,14 +316,6 @@ namespace $safeprojectname$ {
 			this->label1->TabIndex = 1;
 			this->label1->Text = L"Source :";
 			// 
-			// backgroundWorker1
-			// 
-			this->backgroundWorker1->WorkerReportsProgress = true;
-			this->backgroundWorker1->WorkerSupportsCancellation = true;
-			this->backgroundWorker1->DoWork += gcnew System::ComponentModel::DoWorkEventHandler(this, &MyForm::backgroundWorker1_DoWork);
-			this->backgroundWorker1->ProgressChanged += gcnew System::ComponentModel::ProgressChangedEventHandler(this, &MyForm::backgroundWorker1_ProgressChanged);
-			this->backgroundWorker1->RunWorkerCompleted += gcnew System::ComponentModel::RunWorkerCompletedEventHandler(this, &MyForm::backgroundWorker1_RunWorkerCompleted);
-			// 
 			// textBox_path
 			// 
 			this->textBox_path->Enabled = false;
@@ -330,6 +323,14 @@ namespace $safeprojectname$ {
 			this->textBox_path->Name = L"textBox_path";
 			this->textBox_path->Size = System::Drawing::Size(399, 20);
 			this->textBox_path->TabIndex = 0;
+			// 
+			// backgroundWorker1
+			// 
+			this->backgroundWorker1->WorkerReportsProgress = true;
+			this->backgroundWorker1->WorkerSupportsCancellation = true;
+			this->backgroundWorker1->DoWork += gcnew System::ComponentModel::DoWorkEventHandler(this, &MyForm::backgroundWorker1_DoWork);
+			this->backgroundWorker1->ProgressChanged += gcnew System::ComponentModel::ProgressChangedEventHandler(this, &MyForm::backgroundWorker1_ProgressChanged);
+			this->backgroundWorker1->RunWorkerCompleted += gcnew System::ComponentModel::RunWorkerCompletedEventHandler(this, &MyForm::backgroundWorker1_RunWorkerCompleted);
 			// 
 			// MyForm
 			// 
@@ -340,6 +341,7 @@ namespace $safeprojectname$ {
 			this->Controls->Add(this->panel1);
 			this->Name = L"MyForm";
 			this->Text = L"C3Dtools.com";
+			this->Shown += gcnew System::EventHandler(this, &MyForm::MyForm_Shown);
 			this->panel1->ResumeLayout(false);
 			this->panel1->PerformLayout();
 			this->main_panel->ResumeLayout(false);
@@ -354,13 +356,25 @@ namespace $safeprojectname$ {
 
 	}
 
-	private: System::Void login_btn_Click(System::Object^ sender, System::EventArgs^ e) {
-				
+	private: System::Void login_btn_Click(System::Object^ sender, System::EventArgs^ e) {				
 
 		std::map<std::string, std::string> param;
 		param["api_key"] = msclr::interop::marshal_as< std::string >(this->token->Text);
-		std::string responce = _req.SendReq(URL+"/login", &param);
-		this->FindForm()->Text = gcnew String(responce.c_str());
+
+		std::vector<std::string> output;
+		_req.SendReq(URL+"/login", &param , &output);
+		
+		if (output[0] == "OK") {
+			this->FindForm()->Text = gcnew String(output[1].c_str());
+			if (_req.write_token(msclr::interop::marshal_as< std::string >(this->token->Text))) {
+				this->main_panel->Enabled = true;
+			}
+
+		}
+		else {
+			this->log_list->Items->Add("Failed to login...");
+			this->main_panel->Enabled = false;
+		}
 
 
 	}
@@ -492,6 +506,13 @@ namespace $safeprojectname$ {
 		this->logs->Items->Add(">> " + gcnew String(msg.c_str()));		
 
 	}
+private: System::Void MyForm_Load(System::Object^ sender, System::EventArgs^ e) {
+	//read key from file
+
+}
+private: System::Void MyForm_Shown(System::Object^ sender, System::EventArgs^ e) {
+	this->token->Text = gcnew String(_req.read_token().c_str());
+}
 };
 
 };
