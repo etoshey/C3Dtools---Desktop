@@ -24,7 +24,8 @@ namespace $safeprojectname$ {
 
 	MyReq _req;
 	std::vector<std::string> files;
-	std::string URL = "http://localhost:5001/API";
+	//std::string URL = "http://localhost:5001/API";
+	std::string URL = "https://c3dtools.com:443/API";
 	std::vector<std::string> log;
 
 	/// <summary>
@@ -158,9 +159,6 @@ namespace $safeprojectname$ {
 			this->token->Name = L"token";
 			this->token->Size = System::Drawing::Size(452, 20);
 			this->token->TabIndex = 0;
-			this->token->Text = L"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIyMDk1Njc0MTI5Mzc2ODUyMiIsImlh"
-				L"dCI6MTY3OTkxODM0NSwiZXhwIjoxNjc5OTIxOTQ1fQ.esx5EVT6oo1jF0ko_uZvUSlLt8dvrFynLxOrU"
-				L"OkvLLY";
 			// 
 			// login_btn
 			// 
@@ -363,6 +361,7 @@ namespace $safeprojectname$ {
 
 		std::vector<std::string> output;
 		_req.SendReq(URL+"/login", &param , &output);
+		//_req.login(URL + "/login", &param , &output);
 		
 		if (output[0] == "OK") {
 			this->FindForm()->Text = gcnew String(output[1].c_str());
@@ -372,7 +371,7 @@ namespace $safeprojectname$ {
 
 		}
 		else {
-			this->log_list->Items->Add("Failed to login...");
+			this->log_list->Items->Add(gcnew String(output[1].c_str()));
 			this->main_panel->Enabled = false;
 		}
 
@@ -462,7 +461,7 @@ namespace $safeprojectname$ {
 				std::filesystem::path file_name = p.filename();
 
 				log.push_back("Unloading -------> " + file_name.string());
-				this->backgroundWorker1->ReportProgress((i+1) * (100/n));
+				this->backgroundWorker1->ReportProgress((i+1) * (100/(n+1)));
 
 				std::map<std::string, std::string> param;
 				param["api_key"] = msclr::interop::marshal_as< std::string >(this->token->Text);

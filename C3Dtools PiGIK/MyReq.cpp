@@ -1,6 +1,7 @@
 
 #include "MyReq.h"
 
+
 #include <Poco/StreamCopier.h>
 #include <Poco/InflatingStream.h>
 #include <Poco/Net/HTTPClientSession.h>
@@ -9,6 +10,12 @@
 #include <Poco/Net/HTMLForm.h>
 #include <Poco/Net/FilePartSource.h>
 #include <Poco/JSON/Parser.h>
+
+#include <Poco/Net/HTTPSClientSession.h>
+
+
+
+
 #include <Poco/Path.h>
 #include <Poco/URI.h>
 #include <iostream>
@@ -20,76 +27,103 @@
 using namespace Poco;
 using namespace Poco::Net;
 
+
 MyReq::MyReq()
 {
 }
 
+
+
 void MyReq::SendReq(std::string url, std::map<std::string, std::string> * parameters, std::vector<std::string>* output)
 {
 
-	JSON::Object bodyObj;
-	std::map<std::string, std::string>::iterator it = parameters->begin();	
 
-	while (it != parameters->end())
+	try
 	{
-		bodyObj.set(it->first, it->second);	
-		++it;
+		JSON::Object bodyObj;
+		std::map<std::string, std::string>::iterator it = parameters->begin();
+
+		while (it != parameters->end())
+		{
+			bodyObj.set(it->first, it->second);
+			++it;
+		}
+
+		std::ostringstream ss;
+		bodyObj.stringify(ss);
+
+		std::string body;
+		body = ss.str();
+
+		// Create a URI
+		URI uri(url);
+
+
+		// Create a session
+		//HTTPClientSession session(uri.getHost());
+
+		// HTTPS
+		const Poco::Net::Context::Ptr context = new Poco::Net::Context(
+			Poco::Net::Context::CLIENT_USE, "", "", "",
+			Poco::Net::Context::VERIFY_NONE, 9, false,
+			"ALL:!ADH:!LOW:!EXP:!MD5:@STRENGTH");
+		HTTPSClientSession session(uri.getHost(), uri.getPort(), context);
+
+		
+
+		// Set connection to keepalive
+		session.setKeepAlive(true);
+
+		// Choose the http request method
+		HTTPRequest request(HTTPRequest::HTTP_POST, uri.getPath(), HTTPMessage::HTTP_1_0);
+	
+
+		// Add headers
+		request.setContentType("application/json");
+		//request.setContentType("application/form-data");
+
+		request.setContentLength(body.length());
+
+		// send request
+		session.sendRequest(request) << body;
+
+
+		HTTPResponse response;
+
+		// this line is where you get your response
+		std::istream& s = session.receiveResponse(response);
+
+
+
+		std::ostringstream outStringStream;
+		outStringStream << s.rdbuf();
+		std::string res_txt = outStringStream.str();
+		Poco::JSON::Parser parser;
+		auto result = parser.parse(res_txt);
+		Poco::JSON::Object obj = *result.extract<Poco::JSON::Object::Ptr>();
+		std::string status = obj.get("status");
+
+
+
+		if (status == "OK") {
+
+			output->push_back("OK");
+			output->push_back(obj.get("user_name").toString());
+
+		}
+		else {
+			output->push_back("ERROR");
+			output->push_back(obj.get("error_msg").toString());
+		}
 	}
-
-	std::ostringstream ss;
-	bodyObj.stringify(ss);
-
-	std::string body;
-	body = ss.str();
-
-	// Create a URI
-	URI uri(url);
-
-	// Create a session
-	HTTPClientSession session(uri.getHost(), uri.getPort());
-
-	// Set connection to keepalive
-	session.setKeepAlive(true);
-
-	// Choose the http request method
-	HTTPRequest request(HTTPRequest::HTTP_POST, uri.getPath(), HTTPMessage::HTTP_1_1);
-
-	// Add headers
-	request.setContentType("application/json");
-
-	request.setContentLength(body.length());
-
-	// send request
-	session.sendRequest(request) << body;
-
-
-	HTTPResponse response;
-
-	// this line is where you get your response
-	std::istream& s = session.receiveResponse(response);
-
-	
-
-	std::ostringstream outStringStream;
-	outStringStream << s.rdbuf();
-	std::string res_txt = outStringStream.str();
-	Poco::JSON::Parser parser;
-	auto result = parser.parse(res_txt);
-	Poco::JSON::Object obj = *result.extract<Poco::JSON::Object::Ptr>();
-	std::string status = obj.get("status");
-
-	
-
-	if (status == "OK") {
-
-		output->push_back("OK");
-		output->push_back(obj.get("user_name").toString());
+	catch (const std::exception& ex)
+	{
+		output->push_back("ERROR");
+		output->push_back(ex.what());
 		
 	}
-	else {
-		output->push_back("ERROR");
-		output->push_back(obj.get("error_msg").toString());		
-	}
+
+	
 
 
 	
@@ -99,8 +133,7 @@ std::string MyReq::upload(std::string url, std::map<std::string, std::string>* p
 {
 
 	try
-	{
-		
+	{		
 		
 
 		std::filesystem::path p(file_path);
@@ -123,7 +156,13 @@ std::string MyReq::upload(std::string url, std::map<std::string, std::string>* p
 		form.addPart("file", new FilePartSource(file_path));
 		form.prepareSubmit(request);
 
-		HTTPClientSession* httpSession = new HTTPClientSession(uri.getHost(), uri.getPort());
+		// HTTPS
+		const Poco::Net::Context::Ptr context = new Poco::Net::Context(
+			Poco::Net::Context::CLIENT_USE, "", "", "",
+			Poco::Net::Context::VERIFY_NONE, 9, false,
+			"ALL:!ADH:!LOW:!EXP:!MD5:@STRENGTH");
+
+		HTTPSClientSession* httpSession = new HTTPSClientSession(uri.getHost(), uri.getPort(),context);
 		httpSession->setTimeout(Poco::Timespan(60, 0));
 		form.write(httpSession->sendRequest(request));
 
@@ -263,6 +302,13 @@ std::string MyReq::read_token()
 	else {
 		return "";
 	}
+
+}
+
+bool MyReq::login(std::string url, std::map<std::string, std::string>* parameters, std::vector<std::string>* output)
+{
+
+	return false;
 
 }
 
