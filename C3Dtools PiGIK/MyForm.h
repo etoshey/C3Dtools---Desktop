@@ -86,6 +86,8 @@ namespace $safeprojectname$ {
 	private: System::Windows::Forms::CheckBox^ checkbox_YUP;
 	private: System::Windows::Forms::CheckBox^ checkbox_ascii_analog;
 	private: System::Windows::Forms::TextBox^ textBox_path;
+	private: System::Windows::Forms::Timer^ timer1;
+	private: System::ComponentModel::IContainer^ components;
 
 
 
@@ -96,7 +98,8 @@ namespace $safeprojectname$ {
 		/// <summary>
 		/// Required designer variable.
 		/// </summary>
-		System::ComponentModel::Container^ components;
+		int timer_counter = 0;
+		String^ anim_temp;
 
 
 
@@ -107,6 +110,7 @@ namespace $safeprojectname$ {
 		/// </summary>
 		void InitializeComponent(void)
 		{
+			this->components = (gcnew System::ComponentModel::Container());
 			this->panel1 = (gcnew System::Windows::Forms::Panel());
 			this->label3 = (gcnew System::Windows::Forms::Label());
 			this->token = (gcnew System::Windows::Forms::TextBox());
@@ -128,6 +132,7 @@ namespace $safeprojectname$ {
 			this->textBox_path = (gcnew System::Windows::Forms::TextBox());
 			this->folderBrowserDialog1 = (gcnew System::Windows::Forms::FolderBrowserDialog());
 			this->backgroundWorker1 = (gcnew System::ComponentModel::BackgroundWorker());
+			this->timer1 = (gcnew System::Windows::Forms::Timer(this->components));
 			this->panel1->SuspendLayout();
 			this->main_panel->SuspendLayout();
 			this->panel2->SuspendLayout();
@@ -330,6 +335,11 @@ namespace $safeprojectname$ {
 			this->backgroundWorker1->ProgressChanged += gcnew System::ComponentModel::ProgressChangedEventHandler(this, &MyForm::backgroundWorker1_ProgressChanged);
 			this->backgroundWorker1->RunWorkerCompleted += gcnew System::ComponentModel::RunWorkerCompletedEventHandler(this, &MyForm::backgroundWorker1_RunWorkerCompleted);
 			// 
+			// timer1
+			// 
+			this->timer1->Interval = 500;
+			this->timer1->Tick += gcnew System::EventHandler(this, &MyForm::timer1_Tick);
+			// 
 			// MyForm
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
@@ -367,7 +377,7 @@ namespace $safeprojectname$ {
 			this->FindForm()->Text = gcnew String(output[1].c_str());
 			if (_req.write_token(msclr::interop::marshal_as< std::string >(this->token->Text))) {
 				this->main_panel->Enabled = true;
-			}
+			}			
 
 		}
 		else {
@@ -416,11 +426,14 @@ namespace $safeprojectname$ {
 
 		if (this->button_process->Text == "Run") { //Start Processing
 
+			//clear logs
+			this->logs->Items->Clear();
 
 			// run background worker
-			this->backgroundWorker1->RunWorkerAsync(1);
-
-
+			this->backgroundWorker1->RunWorkerAsync(1);		
+			
+			// Start Animate
+			this->timer1->Enabled = true;
 
 			// change to stop btn
 			this->button_process->Text = "Stop";
@@ -429,6 +442,7 @@ namespace $safeprojectname$ {
 
 			this->backgroundWorker1->CancelAsync();
 
+			this->timer1->Enabled = false;
 
 
 			// change to stop btn
@@ -438,8 +452,6 @@ namespace $safeprojectname$ {
 
 
 	}
-
-
 
 
 
@@ -460,7 +472,9 @@ namespace $safeprojectname$ {
 				std::filesystem::path dir = p.parent_path();
 				std::filesystem::path file_name = p.filename();
 
-				log.push_back("Unloading -------> " + file_name.string());
+				log.push_back("Unloading ==> " + file_name.string()) ;
+				anim_temp = ">> Unloading ==> " + gcnew String(file_name.c_str());
+
 				this->backgroundWorker1->ReportProgress((i+1) * (100/(n+1)));
 
 				std::map<std::string, std::string> param;
@@ -471,9 +485,8 @@ namespace $safeprojectname$ {
 				param["ASCII_Analog"] = (this->checkbox_ascii_analog->Checked == true) ? "TRUE" : "FALSE";;
 				param["Y_UP"] = (this->checkbox_YUP->Checked == true) ? "TRUE" : "FALSE";
 
-				
 				_req.upload(URL+"/upload_process", &param, files[i], &log);
-							
+					
 
 				
 			}
@@ -482,7 +495,7 @@ namespace $safeprojectname$ {
 		// completed progress bar
 		log.push_back("---------------- Processing completed ----------------");
 		this->backgroundWorker1->ReportProgress(100);
-		this->button_process->Text = "Stop";
+		
 
 	}
 	private: System::Void backgroundWorker1_ProgressChanged(System::Object^ sender, System::ComponentModel::ProgressChangedEventArgs^ e) {
@@ -497,7 +510,8 @@ namespace $safeprojectname$ {
 
 	private: System::Void backgroundWorker1_RunWorkerCompleted(System::Object^ sender, System::ComponentModel::RunWorkerCompletedEventArgs^ e) {
 
-		
+		this->button_process->Text = "Run";
+		this->timer1->Enabled = false;
 	}
 
 	void update_log(std::string msg) {
@@ -511,6 +525,65 @@ private: System::Void MyForm_Load(System::Object^ sender, System::EventArgs^ e) 
 }
 private: System::Void MyForm_Shown(System::Object^ sender, System::EventArgs^ e) {
 	this->token->Text = gcnew String(_req.read_token().c_str());
+}
+private: System::Void timer1_Tick(System::Object^ sender, System::EventArgs^ e) {
+		
+
+	
+
+	switch (timer_counter)
+	{
+	case 0:
+	{
+		int index = this->logs->Items->IndexOf(anim_temp);
+		if (index>-1)
+			this->logs->Items[index] = anim_temp + ".";
+		break;
+	}
+	case 1:
+	{	
+		int index = this->logs->Items->IndexOf(anim_temp+".");
+		if (index > -1)
+			this->logs->Items[index] = anim_temp + "..";
+		break;
+	}
+	case 2:
+	{
+		int index = this->logs->Items->IndexOf(anim_temp + "..");
+		if (index > -1)
+			this->logs->Items[index] = anim_temp + "...";
+		break;
+	}
+	case 3:
+	{
+		int index = this->logs->Items->IndexOf(anim_temp + "...");
+		if (index > -1)
+			this->logs->Items[index] = anim_temp + "....";
+		break;
+	}
+	case 4:
+	{
+		int index = this->logs->Items->IndexOf(anim_temp + "....");
+		if (index > -1)
+			this->logs->Items[index] = anim_temp + ".....";
+		break;
+	}
+	case 5:
+	{
+		int index = this->logs->Items->IndexOf(anim_temp + ".....");
+		if (index > -1)
+			this->logs->Items[index] = anim_temp;
+		timer_counter = -1;
+		break;
+	}
+	default:
+		break;
+	}
+
+
+	timer_counter++;
+
+
 }
 };
 

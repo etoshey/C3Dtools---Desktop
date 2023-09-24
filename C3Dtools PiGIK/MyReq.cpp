@@ -164,7 +164,9 @@ std::string MyReq::upload(std::string url, std::map<std::string, std::string>* p
 
 		HTTPSClientSession* httpSession = new HTTPSClientSession(uri.getHost(), uri.getPort(),context);
 		httpSession->setTimeout(Poco::Timespan(60, 0));
-		form.write(httpSession->sendRequest(request));
+		form.write(httpSession->sendRequest(request));		
+		
+
 
 		Poco::Net::HTTPResponse res;
 		std::istream& s = httpSession->receiveResponse(res);
