@@ -24,9 +24,9 @@ namespace $safeprojectname$ {
 
 	MyReq _req;
 	std::vector<std::string> files;
-	//std::string URL = "http://localhost:5001/API";
-	std::string URL = "https://c3dtools.com:443/API";
-	std::vector<std::string> log;
+	std::string URL = "http://localhost:5001/API";
+	//std::string URL = "https://c3dtools.com:443/API";
+	std::vector<std::vector<std::string>> log;
 
 	/// <summary>
 	/// Summary for MyForm
@@ -459,7 +459,7 @@ namespace $safeprojectname$ {
 
 		int n = files.size();
 
-		log.push_back("---------------- Processing is Started ----------------");
+		log.push_back(std::vector<std::string> {"---------------- Processing is Started ----------------" , "N"});
 		for (size_t i = 0; i < n; i++)
 		{
 			if (this->backgroundWorker1->CancellationPending) {
@@ -472,8 +472,8 @@ namespace $safeprojectname$ {
 				std::filesystem::path dir = p.parent_path();
 				std::filesystem::path file_name = p.filename();
 
-				log.push_back("Unloading ==> " + file_name.string()) ;
-				anim_temp = ">> Unloading ==> " + gcnew String(file_name.c_str());
+				log.push_back(std::vector < std::string> {"Uploading ==> " + file_name.string(), "N"});
+				anim_temp = ">> Uploading ==> " + gcnew String(file_name.c_str());
 
 				this->backgroundWorker1->ReportProgress((i+1) * (100/(n+1)));
 
@@ -493,7 +493,7 @@ namespace $safeprojectname$ {
 		}
 
 		// completed progress bar
-		log.push_back("---------------- Processing completed ----------------");
+		log.push_back(std::vector < std::string>{"---------------- Processing completed ----------------","N"});
 		this->backgroundWorker1->ReportProgress(100);
 		
 
@@ -514,11 +514,16 @@ namespace $safeprojectname$ {
 		this->timer1->Enabled = false;
 	}
 
-	void update_log(std::string msg) {
+	void update_log(std::vector<std::string> msg) {
 
-		this->logs->Items->Add(">> " + gcnew String(msg.c_str()));		
+		// First parameter indicate to the message
+		// second parameter detemine the text color
 
+		
+		this->logs->Items->Add(">> " + gcnew String(msg[0].c_str()));
+		this->logs->SelectedIndex = this->logs->Items->Count -1;
 	}
+
 private: System::Void MyForm_Load(System::Object^ sender, System::EventArgs^ e) {
 	//read key from file
 
@@ -571,6 +576,27 @@ private: System::Void timer1_Tick(System::Object^ sender, System::EventArgs^ e) 
 	case 5:
 	{
 		int index = this->logs->Items->IndexOf(anim_temp + ".....");
+		if (index > -1)
+			this->logs->Items[index] = anim_temp + "......";
+		break;
+	}
+	case 6:
+	{
+		int index = this->logs->Items->IndexOf(anim_temp + "......");
+		if (index > -1)
+			this->logs->Items[index] = anim_temp + ".......";
+		break;
+	}
+	case 7:
+	{
+		int index = this->logs->Items->IndexOf(anim_temp + ".......");
+		if (index > -1)
+			this->logs->Items[index] = anim_temp + "........";
+		break;
+	}
+	case 8:
+	{
+		int index = this->logs->Items->IndexOf(anim_temp + "........");
 		if (index > -1)
 			this->logs->Items[index] = anim_temp;
 		timer_counter = -1;

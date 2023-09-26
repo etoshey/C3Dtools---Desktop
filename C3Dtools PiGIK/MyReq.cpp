@@ -37,6 +37,10 @@ MyReq::MyReq()
 void MyReq::SendReq(std::string url, std::map<std::string, std::string> * parameters, std::vector<std::string>* output)
 {
 
+	//TODO : Why??!!
+
+
+
 
 	try
 	{
@@ -59,44 +63,74 @@ void MyReq::SendReq(std::string url, std::map<std::string, std::string> * parame
 		URI uri(url);
 
 
-		// Create a session
-		//HTTPClientSession session(uri.getHost());
+		//Getting Response
+		std::ostringstream outStringStream;
 
-		// HTTPS
-		const Poco::Net::Context::Ptr context = new Poco::Net::Context(
-			Poco::Net::Context::CLIENT_USE, "", "", "",
-			Poco::Net::Context::VERIFY_NONE, 9, false,
-			"ALL:!ADH:!LOW:!EXP:!MD5:@STRENGTH");
-		HTTPSClientSession session(uri.getHost(), uri.getPort(), context);
+	
+		if (uri.getScheme() == "http") {
+			// Create a session
+			HTTPClientSession session(uri.getHost(), uri.getPort());
+
+			// Set connection to keepalive
+			session.setKeepAlive(true);
+
+			// Choose the http request method
+			HTTPRequest request(HTTPRequest::HTTP_POST, uri.getPath(), HTTPMessage::HTTP_1_0);
+
+
+			// Add headers
+			request.setContentType("application/json");
+			//request.setContentType("application/form-data");
+
+			request.setContentLength(body.length());
+
+			// send request
+			session.sendRequest(request) << body;
+
+
+			HTTPResponse response;
+
+			// this line is where you get your response
+			std::istream& s = session.receiveResponse(response);
+
+			outStringStream << s.rdbuf();
+		}
+		else {
+			// HTTPS
+			const Poco::Net::Context::Ptr context = new Poco::Net::Context(
+				Poco::Net::Context::CLIENT_USE, "", "", "",
+				Poco::Net::Context::VERIFY_NONE, 9, false,
+				"ALL:!ADH:!LOW:!EXP:!MD5:@STRENGTH");
+			HTTPSClientSession session(uri.getHost(), uri.getPort(), context);
+
+			// Set connection to keepalive
+			session.setKeepAlive(true);
+
+			// Choose the http request method
+			HTTPRequest request(HTTPRequest::HTTP_POST, uri.getPath(), HTTPMessage::HTTP_1_0);
+
+
+			// Add headers
+			request.setContentType("application/json");
+			//request.setContentType("application/form-data");
+
+			request.setContentLength(body.length());
+
+			// send request
+			session.sendRequest(request) << body;
+
+
+			HTTPResponse response;
+
+			// this line is where you get your response
+			std::istream& s = session.receiveResponse(response);
+
+			outStringStream << s.rdbuf();
+		}
+
 
 		
-
-		// Set connection to keepalive
-		session.setKeepAlive(true);
-
-		// Choose the http request method
-		HTTPRequest request(HTTPRequest::HTTP_POST, uri.getPath(), HTTPMessage::HTTP_1_0);
-	
-
-		// Add headers
-		request.setContentType("application/json");
-		//request.setContentType("application/form-data");
-
-		request.setContentLength(body.length());
-
-		// send request
-		session.sendRequest(request) << body;
-
-
-		HTTPResponse response;
-
-		// this line is where you get your response
-		std::istream& s = session.receiveResponse(response);
-
-
-
-		std::ostringstream outStringStream;
-		outStringStream << s.rdbuf();
+		
 		std::string res_txt = outStringStream.str();
 		Poco::JSON::Parser parser;
 		auto result = parser.parse(res_txt);
@@ -129,7 +163,7 @@ void MyReq::SendReq(std::string url, std::map<std::string, std::string> * parame
 	
 }
 
-std::string MyReq::upload(std::string url, std::map<std::string, std::string>* parameter , std::string file_path, std::vector<std::string> * log)
+std::string MyReq::upload(std::string url, std::map<std::string, std::string>* parameter , std::string file_path, std::vector<std::vector<std::string>> * log)
 {
 
 	try
@@ -191,10 +225,10 @@ std::string MyReq::upload(std::string url, std::map<std::string, std::string>* p
 				MakeDir(dir.string() + "\\C3Dtools");
 				if (WriteFile(dir.string() + "\\C3Dtools\\" + file_name.string() + ".trc", &trc_output, false)) {
 					//file is generated succssfully
-					log->push_back("Exporting TRC is done.");
+					log->push_back(std::vector < std::string> {"Exporting TRC is done." , "T"});
 				}
 				else {
-					log->push_back("Exporting TRC Failed.");
+					log->push_back(std::vector < std::string> {"Exporting TRC Failed.","F"});
 				}
 
 			}
@@ -207,10 +241,10 @@ std::string MyReq::upload(std::string url, std::map<std::string, std::string>* p
 				MakeDir(dir.string() + "\\C3Dtools");
 				if (WriteFile(dir.string() + "\\C3Dtools\\" + file_name.string() + ".mot", &mot_output, false)) {
 					//file is generated succssfully
-					log->push_back("Exporting MOT is done.");
+					log->push_back(std::vector < std::string>{"Exporting MOT is done.", "T"});
 				}
 				else {
-					log->push_back("Exporting MOT Failed.");
+					log->push_back(std::vector < std::string> {"Exporting MOT Failed." , "F"});
 				}
 			}
 			//-------------------- ASCII POINT  --------------------------//
@@ -222,10 +256,10 @@ std::string MyReq::upload(std::string url, std::map<std::string, std::string>* p
 				MakeDir(dir.string() + "\\C3Dtools");
 				if (WriteFile(dir.string() + "\\C3Dtools\\" + file_name.string() + ".txt", &ascii_points_output, false)) {
 					//file is generated succssfully
-					log->push_back("Exporting ASCII - Points is done.");
+					log->push_back(std::vector < std::string>{"Exporting ASCII - Points is done.","T"});
 				}
 				else {
-					log->push_back("Exporting ASCII - Points Failed.");
+					log->push_back(std::vector < std::string>{"Exporting ASCII - Points Failed.","F"});
 				}
 			}
 			//-------------------- ASCII Analog  --------------------------//
@@ -237,10 +271,10 @@ std::string MyReq::upload(std::string url, std::map<std::string, std::string>* p
 				MakeDir(dir.string() + "\\C3Dtools");
 				if (WriteFile(dir.string() + "\\C3Dtools\\" + file_name.string() + ".txt", &ascii_analoge_output, false)) {
 					//file is generated succssfully
-					log->push_back("Exporting ASCII - Analog is done.");
+					log->push_back(std::vector < std::string>{"Exporting ASCII - Analog is done.","T"});
 				}
 				else {
-					log->push_back("Exporting ASCII - Analog Failed.");
+					log->push_back(std::vector < std::string>{"Exporting ASCII - Analog Failed.","F"});
 				}
 			}
 
@@ -254,7 +288,7 @@ std::string MyReq::upload(std::string url, std::map<std::string, std::string>* p
 	}
 	catch (const std::exception&)
 	{
-		log->push_back( " FAILED !!");
+		log->push_back(std::vector < std::string>{" FAILED !!", "F"});
 	}
 }
 
@@ -340,7 +374,7 @@ bool MyReq::WriteFile(std::string path, std::vector<std::string>* data, bool app
 	return true;
 }
 
-void MyReq::ExtractTrc(std::string* trc_data, std::vector<std::string>* output, std::vector<std::string>* log)
+void MyReq::ExtractTrc(std::string* trc_data, std::vector<std::string>* output, std::vector<std::vector<std::string>>* log)
 {
 	Poco::JSON::Parser parser;
 	auto trc_results = parser.parse(*trc_data);
@@ -372,13 +406,13 @@ void MyReq::ExtractTrc(std::string* trc_data, std::vector<std::string>* output, 
 	catch (const std::exception&)
 	{
 		std::string mot_error_msg = trc_obj.get("error_msg");
-		log->push_back("Failed to extract TRC data *");
+		log->push_back(std::vector < std::string>{"Failed to extract TRC data *", "F"});
 
 	}
 
 }
 
-void MyReq::ExtractMot(std::string* mot_data, std::vector<std::string>* output , std::vector<std::string>* log)
+void MyReq::ExtractMot(std::string* mot_data, std::vector<std::string>* output , std::vector<std::vector<std::string>>* log)
 {
 	Poco::JSON::Parser parser;
 	auto mot_results = parser.parse(*mot_data);
@@ -405,13 +439,13 @@ void MyReq::ExtractMot(std::string* mot_data, std::vector<std::string>* output ,
 	catch (const std::exception&)
 	{
 		std::string mot_error_msg = mot_obj.get("error_msg");
-		log->push_back("Failed to extract Mot data *");
+		log->push_back(std::vector < std::string>{"Failed to extract Mot data *","F"});
 		
 	}
 
 }
 
-void MyReq::ExtractAscii(std::string* _data, std::vector<std::string>* output, std::vector<std::string>* log)
+void MyReq::ExtractAscii(std::string* _data, std::vector<std::string>* output, std::vector<std::vector<std::string>>* log)
 {
 	Poco::JSON::Parser parser;
 	auto _results = parser.parse(*_data);
@@ -438,7 +472,7 @@ void MyReq::ExtractAscii(std::string* _data, std::vector<std::string>* output, s
 	catch (const std::exception&)
 	{
 		std::string mot_error_msg = _obj.get("error_msg");
-		log->push_back("Failed to extract ASCII data *");
+		log->push_back(std::vector < std::string>{"Failed to extract ASCII data *","F"});
 	}
 }
 
