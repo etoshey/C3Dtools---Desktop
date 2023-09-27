@@ -472,6 +472,7 @@ namespace $safeprojectname$ {
 				std::filesystem::path dir = p.parent_path();
 				std::filesystem::path file_name = p.filename();
 
+				log.push_back(std::vector < std::string> {"", "N"});
 				log.push_back(std::vector < std::string> {"Uploading ==> " + file_name.string(), "N"});
 				anim_temp = ">> Uploading ==> " + gcnew String(file_name.c_str());
 

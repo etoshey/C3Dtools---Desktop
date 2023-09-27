@@ -174,6 +174,8 @@ std::string MyReq::upload(std::string url, std::map<std::string, std::string>* p
 		std::filesystem::path dir = p.parent_path();
 		std::filesystem::path file_name = p.filename();
 
+		//Response
+		std::ostringstream outStringStream;
 
 		// Create a URI
 		URI uri(url);
@@ -190,22 +192,43 @@ std::string MyReq::upload(std::string url, std::map<std::string, std::string>* p
 		form.addPart("file", new FilePartSource(file_path));
 		form.prepareSubmit(request);
 
-		// HTTPS
-		const Poco::Net::Context::Ptr context = new Poco::Net::Context(
-			Poco::Net::Context::CLIENT_USE, "", "", "",
-			Poco::Net::Context::VERIFY_NONE, 9, false,
-			"ALL:!ADH:!LOW:!EXP:!MD5:@STRENGTH");
 
-		HTTPSClientSession* httpSession = new HTTPSClientSession(uri.getHost(), uri.getPort(),context);
-		httpSession->setTimeout(Poco::Timespan(60, 0));
-		form.write(httpSession->sendRequest(request));		
-		
+		if (uri.getScheme() == "http") {
 
 
-		Poco::Net::HTTPResponse res;
-		std::istream& s = httpSession->receiveResponse(res);
-		std::ostringstream outStringStream;
-		outStringStream << s.rdbuf();
+			// Create a session
+			HTTPClientSession httpSession(uri.getHost(), uri.getPort());
+
+			httpSession.setTimeout(Poco::Timespan(60, 0));
+			form.write(httpSession.sendRequest(request));
+
+			Poco::Net::HTTPResponse res;
+			std::istream& s = httpSession.receiveResponse(res);
+
+			outStringStream << s.rdbuf();
+		}
+		else {
+
+			// HTTPS
+			const Poco::Net::Context::Ptr context = new Poco::Net::Context(
+				Poco::Net::Context::CLIENT_USE, "", "", "",
+				Poco::Net::Context::VERIFY_NONE, 9, false,
+				"ALL:!ADH:!LOW:!EXP:!MD5:@STRENGTH");
+
+			HTTPSClientSession* httpSession = new HTTPSClientSession(uri.getHost(), uri.getPort(), context);
+			httpSession->setTimeout(Poco::Timespan(60, 0));
+			form.write(httpSession->sendRequest(request));
+
+
+
+			Poco::Net::HTTPResponse res;
+			std::istream& s = httpSession->receiveResponse(res);
+			
+			outStringStream << s.rdbuf();
+
+		}
+
+
 		std::string res_txt = outStringStream.str();
 		Poco::JSON::Parser parser;
 		auto result = parser.parse(res_txt);
@@ -219,62 +242,86 @@ std::string MyReq::upload(std::string url, std::map<std::string, std::string>* p
 			//-------------------- TRC  --------------------------//
 			std::map<std::string, std::string>::iterator check_trc = parameter->find("TRC");
 			if (check_trc->second == "TRUE") {
+				log->push_back(std::vector < std::string>{"--------------- TRC ------------- ", "T"});
 				std::string trc_data = Main_data.get("trc_result");
 				std::vector<std::string> trc_output;
 				ExtractTrc(&trc_data, &trc_output, log);
-				MakeDir(dir.string() + "\\C3Dtools");
-				if (WriteFile(dir.string() + "\\C3Dtools\\" + file_name.string() + ".trc", &trc_output, false)) {
-					//file is generated succssfully
-					log->push_back(std::vector < std::string> {"Exporting TRC is done." , "T"});
+				if (trc_output.size() > 0) {
+					MakeDir(dir.string() + "\\C3Dtools");
+					if (WriteFile(dir.string() + "\\C3Dtools\\" + file_name.string() + ".trc", &trc_output, false)) {
+						//file is generated succssfully
+						log->push_back(std::vector < std::string> {"Exporting TRC is done.", "T"});
+					}
+					else {
+						log->push_back(std::vector < std::string> {"Exporting TRC Failed.", "F"});
+					}
 				}
 				else {
-					log->push_back(std::vector < std::string> {"Exporting TRC Failed.","F"});
+					log->push_back(std::vector < std::string> {"TRC Data Not Found.", "F"});
 				}
 
 			}
 			//-------------------- MOT  --------------------------//
 			std::map<std::string, std::string>::iterator check_mot = parameter->find("MOT");
 			if (check_mot->second == "TRUE") {
+				log->push_back(std::vector < std::string>{"--------------- MOT ------------- ", "T"});
 				std::string mot_data = Main_data.get("mot_result");
 				std::vector<std::string> mot_output;
 				ExtractMot(&mot_data, &mot_output,log);
-				MakeDir(dir.string() + "\\C3Dtools");
-				if (WriteFile(dir.string() + "\\C3Dtools\\" + file_name.string() + ".mot", &mot_output, false)) {
-					//file is generated succssfully
-					log->push_back(std::vector < std::string>{"Exporting MOT is done.", "T"});
+				if (mot_output.size() > 0) {
+					MakeDir(dir.string() + "\\C3Dtools");
+					if (WriteFile(dir.string() + "\\C3Dtools\\" + file_name.string() + ".mot", &mot_output, false)) {
+						//file is generated succssfully
+						log->push_back(std::vector < std::string>{"Exporting MOT is done.", "T"});
+					}
+					else {
+						log->push_back(std::vector < std::string> {"Exporting MOT Failed.", "F"});
+					}
 				}
 				else {
-					log->push_back(std::vector < std::string> {"Exporting MOT Failed." , "F"});
+					log->push_back(std::vector < std::string> {"MOT: Data Not Found.", "F"});
 				}
 			}
 			//-------------------- ASCII POINT  --------------------------//
 			std::map<std::string, std::string>::iterator check_ascii_point = parameter->find("ASCII_Points");
 			if (check_ascii_point->second == "TRUE") {
+				log->push_back(std::vector < std::string>{"--------------- ASCII - Points ------------- ", "T"});
 				std::string ascii_point_data = Main_data.get("ascii_point_result");
 				std::vector<std::string> ascii_points_output;
 				ExtractAscii(&ascii_point_data, &ascii_points_output, log);
-				MakeDir(dir.string() + "\\C3Dtools");
-				if (WriteFile(dir.string() + "\\C3Dtools\\" + file_name.string() + ".txt", &ascii_points_output, false)) {
-					//file is generated succssfully
-					log->push_back(std::vector < std::string>{"Exporting ASCII - Points is done.","T"});
+				if (ascii_points_output.size() > 0) {
+					MakeDir(dir.string() + "\\C3Dtools");
+					if (WriteFile(dir.string() + "\\C3Dtools\\" + file_name.string() + ".txt", &ascii_points_output, false)) {
+						//file is generated succssfully
+						log->push_back(std::vector < std::string>{"Exporting ASCII - Points is done.", "T"});
+					}
+					else {
+						log->push_back(std::vector < std::string>{"Exporting ASCII - Points Failed.", "F"});
+					}
 				}
 				else {
-					log->push_back(std::vector < std::string>{"Exporting ASCII - Points Failed.","F"});
+					log->push_back(std::vector < std::string>{"Exporting ASCII - Data Not Found.", "F"});
 				}
 			}
 			//-------------------- ASCII Analog  --------------------------//
 			std::map<std::string, std::string>::iterator check_ascii_analog = parameter->find("ASCII_Analog");
 			if (check_ascii_analog->second == "TRUE") {
+				log->push_back(std::vector < std::string>{"--------------- ASCII - Analog ------------- ", "T"});
 				std::string ascii_analog_data = Main_data.get("ascii_analog_result");
 				std::vector<std::string> ascii_analoge_output;
-				ExtractAscii(&ascii_analog_data, &ascii_analoge_output, log);
-				MakeDir(dir.string() + "\\C3Dtools");
-				if (WriteFile(dir.string() + "\\C3Dtools\\" + file_name.string() + ".txt", &ascii_analoge_output, false)) {
-					//file is generated succssfully
-					log->push_back(std::vector < std::string>{"Exporting ASCII - Analog is done.","T"});
+				ExtractAscii_analog(&ascii_analog_data, &ascii_analoge_output, log);
+				if (ascii_analoge_output.size() > 0) {
+					MakeDir(dir.string() + "\\C3Dtools");
+					if (WriteFile(dir.string() + "\\C3Dtools\\" + file_name.string() + "_Analog.txt", &ascii_analoge_output, false)) {
+						//file is generated succssfully
+						log->push_back(std::vector < std::string>{"Exporting ASCII - Analog is done.", "T"});
+					}
+					else {
+						log->push_back(std::vector < std::string>{"Exporting ASCII - Analog Failed.", "F"});
+					}
 				}
 				else {
-					log->push_back(std::vector < std::string>{"Exporting ASCII - Analog Failed.","F"});
+					log->push_back(std::vector < std::string>{"Exporting Analoge - Data Not Found.", "F"});
 				}
 			}
 
@@ -286,9 +333,10 @@ std::string MyReq::upload(std::string url, std::map<std::string, std::string>* p
 
 		return std::string();
 	}
-	catch (const std::exception&)
+	catch (const std::exception& ex)
 	{
 		log->push_back(std::vector < std::string>{" FAILED !!", "F"});
+		log->push_back(std::vector < std::string>{ex.what(), "F"});
 	}
 }
 
@@ -475,6 +523,37 @@ void MyReq::ExtractAscii(std::string* _data, std::vector<std::string>* output, s
 		log->push_back(std::vector < std::string>{"Failed to extract ASCII data *","F"});
 	}
 }
+
+
+void MyReq::ExtractAscii_analog(std::string* _data, std::vector<std::string>* output, std::vector<std::vector<std::string>>* log)
+{
+	Poco::JSON::Parser parser;
+	auto _results = parser.parse(*_data);
+	Poco::JSON::Object _obj = *_results.extract<Poco::JSON::Object::Ptr>();
+	try
+	{
+
+		std::string _success_msg = _obj.get("success_msg");
+		std::string _json = _obj.get("json");
+		auto ascii = parser.parse(_json);
+		Poco::JSON::Object ascii_main = *ascii.extract<Poco::JSON::Object::Ptr>();
+		std::string _ascii_h1 = ascii_main.get("h1");
+		output->push_back(_ascii_h1);
+
+		Poco::JSON::Array::Ptr _ascii_array = ascii_main.getArray("data");
+		Poco::Dynamic::Array da = *_ascii_array;
+		for (int i = 0; i < da.size(); i++)
+		{
+			output->push_back(da[i]);
+		}
+	}
+	catch (const std::exception&)
+	{
+		std::string mot_error_msg = _obj.get("error_msg");
+		log->push_back(std::vector < std::string>{"Failed to extract ASCII data *", "F"});
+	}
+}
+
 
 bool MyReq::MakeDir(std::string path)
 {

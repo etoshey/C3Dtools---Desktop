@@ -25,6 +25,7 @@ private:
 	void ExtractTrc(std::string* trc_data, std::vector<std::string>* output, std::vector<std::vector<std::string>>* log);
 	void ExtractMot(std::string* mot_data, std::vector<std::string>* output, std::vector<std::vector<std::string>>* log);
 	void ExtractAscii(std::string* mot_data, std::vector<std::string>* output, std::vector<std::vector<std::string>>* log);
+	void ExtractAscii_analog(std::string* _data, std::vector<std::string>* output, std::vector<std::vector<std::string>>* log);
 	bool MakeDir(std::string path);
 
 
